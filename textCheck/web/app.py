@@ -110,7 +110,7 @@ class Detect(Resource):
             "msg": "Score calculated"
         }
         
-        current_tokens = current_tokens(username)
+        current_tokens = countTokens(username)
 
         users.update_one({
             "Username": username,
