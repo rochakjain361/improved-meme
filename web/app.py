@@ -41,6 +41,7 @@ class Register(Resource):
             "status" : 200,
             "msg": "You successfully signed up for the API"
         }
+        
         return jsonify(retJson)
 
 def verifyPw(username, password):
