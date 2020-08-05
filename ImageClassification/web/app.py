@@ -69,7 +69,7 @@ class Register(Resource):
         users.insert_one({
             "Username": username,
             "Password": hashed_pw,
-            "Tokens": 6
+            "Tokens": 20
         })
 
         retJson = {
@@ -85,9 +85,8 @@ class Classify(Resource):
 
         username = postedData["username"]
         password = postedData["password"]
-        ur = postedData["url"]
+        url = postedData["url"]
 
-        #TODO
         retJson, error = verifyCredentials(username, password)
 
         if error:
@@ -104,11 +103,11 @@ class Classify(Resource):
         retJson = {}
         with open("temp.jpg", "wb") as f:
             f.write(r.content)
-            proc = subprocess.Popen('python classify_image.py --models_dir=. --image_file=./temp.jpg')
-            proc.communicate()[0]
+            proc = subprocess.Popen('python classify_image.py --model_dir=. --image_file=./temp.jpg', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+            ret = proc.communicate()[0]
             proc.wait()
-            with open("text.txt") as g:
-                retJson = json.load(g)
+            with open("text.txt") as f:
+                retJson = json.load(f)
         
         users.update({
             "Username": username
@@ -118,3 +117,37 @@ class Classify(Resource):
             }
         })
         return retJson
+
+class Refill(Resource):
+    def post(self):
+        postedData = request.get_json()
+
+        username = postedData["username"]
+        password = postedData["password"]
+        amount = postedDatap["amount"]
+
+        if not UserExist(username):
+            return jsonify(generateReturnDictionary(301, "Invlaid Username"))
+
+        correct_pw = "abc123"
+
+        if not password == correct_pw:
+            return jsonify(generateReturnDictionary(304, "Invalid Administrator Password"))
+
+        users.update({
+            "Username": username
+        },
+        {
+            "$set": {
+                "Tokens" : amount
+            }
+        })  
+
+        return jsonify(generateReturnDictionary(200, "Refilled Successfully")) 
+
+api.add_resource(Register, '/register')
+api.add_resource(Classify, '/classify')
+api.add_resource(Refill, '/refill')
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')
